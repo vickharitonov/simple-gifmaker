@@ -109,10 +109,10 @@ class Frames:
 
     # Compiling cropped, resized and compressed images into gif
     def compile(self):
-        self.croppped_frames[0].save(
+        self.resized_frames[0].save(
             "output.gif",
             save_all=True,
-            append_images=self.croppped_frames[1:],
+            append_images=self.resized_frames[1:],
             optimize=True,
             duration=duration,
             quality=1,
