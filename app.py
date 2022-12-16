@@ -2,69 +2,86 @@ from PIL import Image
 from PIL import ImageOps
 import os
 
-frames = []
-resizing_frames = []
-heights = []
-widths = []
-
 
 """Obtaining images dir"""
-gifdir = os.getcwd() + "/" + input('Input your gif catalog: ')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RESOURCES_DIR = BASE_DIR + "/" + input("Choose your gif catalog: ")
 
 
-"""Adding image obj to frames list"""
-for image in sorted(os.listdir(gifdir)):
-    frame = Image.open(f'{gifdir}/{image}')
-    frames.append(frame)
+class Frames:
+    def __init__(self):
+        self.frames = []
+        self.croppped_frames = []
+        self.resized_frames = []
+        self.min_width = None
+        self.min_width = None
 
 
-"""Obtaining heights from image objects and adding to heights list"""
-for obj in frames:
-    heights.append(obj.height)
+    def collector(self):
+        for image in sorted(os.listdir(RESOURCES_DIR)):
+            frame = Image.open(f"{RESOURCES_DIR}/{image}")
+            self.frames.append(frame)
 
+    def get_minHeight(self):
+        heights = []
+        for obj in self.frames:
+            heights.append(obj.height)
+        self.min_height = min(heights)
 
-"""Obtaining max height from heights list"""
-maxheight = max(heights)
+    def get_minWidth(self):
+        widths = []
+        for obj in self.frames:
+            widths.append(obj.width)
+        self.min_width = min(widths)
 
+    def cropper(self):
+        for frame in self.frames:
+            if frame.width > self.min_width:
+                left = round((frame.width - self.min_width) / 2)
+                right = frame.width-left
+            else:
+                left = 0
+                right = self.min_width
+            print(left, right)
+            if frame.height > self.min_height:
+                top = round((frame.height - self.min_height) / 2)
+                bottom = frame.height - top
+            else:
+                top = 0
+                bottom = self.min_height
+            print(top, bottom)    
+            with frame as fr:
+                fr_crop = fr.crop((left, top, right, bottom))
+                self.croppped_frames.append(fr_crop)
 
-"""Obtaining widths from image objects and adding to widths list"""
-for obj in frames:
-    widths.append(obj.width)
+    def resizer(self):
+        for frame in self.croppped_frames:
+            with frame as fr:
+                resized_frame = fr.resize((self.min_width, self.min_height))
+                self.resized_frames.append(resized_frame)
+                
+    
+    def compile(self):
+        self.croppped_frames[0].save(
+        'output.gif',
+        save_all=True,
+        append_images=self.croppped_frames[1:],
+        optimize=True,
+        duration=600,
+        loop = 0
+        )
 
+test = Frames()
+test.collector()
+test.get_minHeight()
+test.get_minWidth()
+test.cropper()
+test.resizer()
+test.compile()
+print(test.min_height)
+print(test.min_width)
+print(test.croppped_frames)
+print(test.resized_frames)
+print(len(test.resized_frames))
 
-"""Obtaining max width from widths list"""
-maxwidth = max(widths)
-
-
-"""Obtaining left top right bottom borders for frame object and resizing_frames"""
-left = 0
-top = 0
-right = 0
-bottom = 0
-for image in frames:
-    if image.height < maxheight:
-        top, bottom = (maxheight - image.height) / 2
-
-
-
-print(heights)
-print(widths)
-print(maxheight)
-print(maxwidth)
-
-"""Saving image file with folling parameters"""
-# frames[0].save(
-#     'output.gif',
-#     save_all=True,
-#     append_images=frames[1:],
-#     optimize=True,
-#     duration=300,
-#     loop=0
-# )
-
-def makeGif():
-    pass
-
-
-if __name__ == "__main__":
-    makeGif()
+# if __name__ == "__main__":
