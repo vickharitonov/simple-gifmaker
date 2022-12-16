@@ -22,7 +22,7 @@ while True:
     else:
         print("Wrong catalog name. Try again")
 
-#input for quality number
+# input for quality number
 quality = None
 while True:
     quality = input("Choose image quality from 1 to 100 (85 is optimum): ")
@@ -32,10 +32,12 @@ while True:
     else:
         print("Wrong quality size. Try again")
 
-#inout for duration per frame time
+# inout for duration per frame time
 duration = None
 while True:
-    duration = input("Select duration time per frame in milliseconds from 100 to 1000: ")
+    duration = input(
+        "Select duration time per frame in milliseconds from 100 to 1000: "
+    )
     if duration.isdigit() and int(duration) in range(100, 1001):
         duration = int(duration)
         break
