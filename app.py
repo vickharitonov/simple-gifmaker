@@ -1,137 +1,83 @@
-from PIL import Image
 import os
+from constants import *
+from image_handlers import *
 
 
-# Obtaining images dir
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-COMPRESSED_DIR = BASE_DIR + "/compressed"
+quality = None
+while True:
+    try:
+        quality = int(input("Choose image quality from 1 to 100 (85 is optimum): "))
+    except ValueError:
+        print("Please enter a valid integer 1-100")
+        continue
+    if quality in range(1, 101):
+        print(f"You choose quality: {quality}")
+        break
+    else:
+        print("Quality must be in range 1-100")
 
-# Creating dir for compresed images
+duration = None
+while True:
+    try:
+        duration = int(
+            input("Choose duratin time per frame in milliseconds 100-1000: ")
+        )
+    except ValueError:
+        print("Please enter a valid integer 100-1000")
+        continue
+    if duration in range(100, 1001):
+        print(f"You choose duration: {duration} ms per frame")
+        break
+    else:
+        print("Duration must be in range 100-1000")
+
+RESOURCES_DIR = None
+while True:
+    RESOURCES_DIR = os.path.join(BASE_DIR, input("Select dir with your images: "))
+    if os.path.isdir(RESOURCES_DIR):
+        RESOURCES_DIR = RESOURCES_DIR
+        print(f"You select {RESOURCES_DIR} as source directory")
+        break
+    else:
+        print("Such a directory doesn't exist. Please try again")
+
+# Renaming all files in resource dir to lowercase
+for file in os.listdir(RESOURCES_DIR):
+    os.rename(
+        os.path.join(RESOURCES_DIR, file), os.path.join(RESOURCES_DIR, file.lower())
+    )
+
+# Creating a directory for compressed images
 if os.path.isdir("compressed"):
     pass
 else:
     os.mkdir("compressed")
 
-# input for resources dir
-RESOURCES_DIR = None
-while True:
-    RESOURCES_DIR = BASE_DIR + "/" + input("Select dir with your images: ")
-    if os.path.isdir(RESOURCES_DIR):
-        RESOURCES_DIR = RESOURCES_DIR
-        break
+handler = Handler()
+compressor = Compressor(quality)
+compiler = Compiler(duration)
+
+# Run func depends on setting quality. if quality not 100 source for collector will be in COMPRESSED_DIR
+def run(resource):
+    handler.collector(resource)
+    handler.get_heights()
+    handler.get_widths()
+    # if all images are the same size
+    if len(set(handler.heights)) == 1 and len(set(handler.widths)) == 1:
+        compiler.compile(handler.frames)
+    # if images are not the same size, they'll be cropped and resized
     else:
-        print("Wrong catalog name. Try again")
-
-# input for quality number
-quality = None
-while True:
-    quality = input("Choose image quality from 1 to 100 (85 is optimum): ")
-    if quality.isdigit() and int(quality) in range(1, 101):
-        quality = int(quality)
-        break
-    else:
-        print("Wrong quality size. Try again")
-
-# inout for duration per frame time
-duration = None
-while True:
-    duration = input(
-        "Select duration time per frame in milliseconds from 100 to 1000: "
-    )
-    if duration.isdigit() and int(duration) in range(100, 1001):
-        duration = int(duration)
-        break
-    else:
-        print("Wrong duration time. Try again")
-
-
-class Frames:
-    def __init__(self):
-        self.frames = []
-        self.croppped_frames = []
-        self.resized_frames = []
-        self.min_width = None
-        self.min_width = None
-
-    # Compressing images
-    def compression(self):
-        for image in os.listdir(RESOURCES_DIR):
-            img = Image.open(f"{RESOURCES_DIR}/{image}")
-            img.save(f"{BASE_DIR}/compressed/{image}", optimize=True, quality=quality)
-
-    # Finding all images and adding them to frames list
-    def collector(self):
-        for image in sorted(os.listdir(COMPRESSED_DIR)):
-            frame = Image.open(f"{COMPRESSED_DIR}/{image}")
-            self.frames.append(frame)
-
-    # Obtaining min height from frames
-    def get_minHeight(self):
-        heights = []
-        for obj in self.frames:
-            heights.append(obj.height)
-        self.min_height = min(heights)
-
-    # Obtaining min width from frames
-    def get_minWidth(self):
-        widths = []
-        for obj in self.frames:
-            widths.append(obj.width)
-        self.min_width = min(widths)
-
-    # Cropping frames to min_width x min_height. Due to rounded keys sizes are not the same, then need to resize
-    def cropper(self):
-        for frame in self.frames:
-            if frame.width > self.min_width:
-                left = round((frame.width - self.min_width) / 2)
-                right = frame.width - left
-            else:
-                left = 0
-                right = self.min_width
-            print(left, right)
-            if frame.height > self.min_height:
-                top = round((frame.height - self.min_height) / 2)
-                bottom = frame.height - top
-            else:
-                top = 0
-                bottom = self.min_height
-            print(top, bottom)
-            with frame as fr:
-                fr_crop = fr.crop((left, top, right, bottom))
-                self.croppped_frames.append(fr_crop)
-
-    # Resizing frames to min_width x min_height
-    def resizer(self):
-        for frame in self.croppped_frames:
-            with frame as fr:
-                resized_frame = fr.resize((self.min_width, self.min_height))
-                self.resized_frames.append(resized_frame)
-
-    # Compiling cropped, resized and compressed images into gif
-    def compile(self):
-        self.resized_frames[0].save(
-            "output.gif",
-            save_all=True,
-            append_images=self.resized_frames[1:],
-            optimize=True,
-            duration=duration,
-            quality=1,
-            loop=0,
-        )
-        # Removing compressed frames
-        for image in os.listdir(COMPRESSED_DIR):
-            os.remove(f"{COMPRESSED_DIR}/{image}")
+        handler.cropper()
+        handler.resizer()
+        compiler.compile(handler.resized_frames)
 
 
 def main():
-    gif = Frames()
-    gif.compression()
-    gif.collector()
-    gif.get_minHeight()
-    gif.get_minWidth()
-    gif.cropper()
-    gif.resizer()
-    gif.compile()
+    if quality != 100:
+        compressor.compression(RESOURCES_DIR)
+        run(COMPRESSED_DIR)
+    else:
+        run(RESOURCES_DIR)
 
 
 if __name__ == "__main__":
