@@ -9,4 +9,4 @@ class ExtensionValidator:
         )  # getting extension string after last '.'
         return (
             ext in self.extensions
-        )  # returns True if fileextension in extensions list
+        )  # True if file extension in extensions list

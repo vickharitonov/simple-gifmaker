@@ -2,7 +2,7 @@ from PIL import Image
 from constants import *
 from validators import *
 
-
+# extensions to be searched in resource dir
 validator = ExtensionValidator(("jpg", "png", "bmp", "jpeg"))
 
 
@@ -50,7 +50,7 @@ class Handler:
         self.min_width = None
         self.min_width = None
 
-    # Finding all images and adding them to frames list
+    # Getting all images from source dir and adding them to frames list
     def collector(self, source_dir):
         imglist = list(filter(validator, os.listdir(source_dir)))
         for image in sorted(imglist):
@@ -69,7 +69,7 @@ class Handler:
             self.widths.append(obj.width)
         self.min_width = min(self.widths)
 
-    # Cropping frames to min_width x min_height. Due to rounded keys sizes are not the same, then need to resize
+    # Cropping frames to min_width x min_height. Due to rounded keys sizes can't be the same, then need to resize
     def cropper(self):
         for frame in self.frames:
             if frame.width > self.min_width:

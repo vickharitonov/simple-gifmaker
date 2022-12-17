@@ -1,5 +1,5 @@
 <h2>Simple GIF images maker</h2>
-Allows you to create animated gif-images from different-sized frames. Gifmaker will crop all collected frames to the calculated minimum size.
+Allows you to create animated gif-images from different-sized frames. Gifmaker will crop all collected frames to the calculated minimum size. Also you can set quality of compiling frames and duration time per frame in milliseconds
 <h3>Installation</h3>
 
 ```sh
@@ -22,4 +22,4 @@ or activate project env
 python3 app.py
 ```
 -Follow instructions<br>
--Look your created gif file as output.gif in simple-gifmaker dir
+-Find your gif file as output.gif in simple-gifmaker dir
